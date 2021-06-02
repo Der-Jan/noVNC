@@ -898,6 +898,8 @@
         _negotiate_aten_auth: function () {
             var aten_sep = this._aten_password_sep;
             var aten_auth = this._rfb_password.split(aten_sep);
+
+            this._rfb_atenikvm = true;
             if (aten_auth.length < 2) {
                 this._onPasswordRequired(
                     this,
@@ -905,17 +907,11 @@
                 return false;
             }
 
-            this._rfb_atenikvm = true;
             this._convert_color = true;
+            this._rfb_tightvnc = false;
 
-            if (this._rfb_tightvnc) {
-                // N.B.(kelleyk): We've already "skipped" the four bytes that we read into numTunnels.
-                this._rfb_tightvnc = false;
-            } else {
-                this._sock.rQskipBytes(4);
-            }
-
-            this._sock.rQskipBytes(16);
+            // (kelleyk): skip 20.
+            this._sock.rQskipBytes(20);
 
             var username = aten_auth[0];
             username += new Array(24 - username.length+1).join("\x00");
@@ -1025,6 +1021,10 @@
                     this._negotiate_tight_tunnels(numTunnels);
                     return false;  // wait until we receive the sub auth to continue
                 }
+            }
+
+            if (this._rfb_atenikvm) {
+                return this._negotiate_aten_auth();
             }
 
             // second pass, do the sub-auth negotiation

@@ -1,0 +1,20 @@
+{
+  "name": "noVNC ATEN",
+  "version": "1.4",
+  "slug": "novnc_aten",
+  "description": "Supermicro BMC Access via noVNC",
+  "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
+  "startup": "application",
+  "boot": "auto",
+  "options": {
+      "vnc_dest": "172.16.0.9:5900"
+  },
+  "schema": {
+      "vnc_dest": "str"
+  },
+  "ports": {
+     "6080/tcp": 6080
+  },
+  "ingress": true,
+  "ingress_port": 6080
+}

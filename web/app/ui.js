@@ -161,8 +161,6 @@ var UI;
 
             UI.updateVisualState();
 
-            document.getElementById('noVNC_setting_host').focus();
-
             var autoconnect = WebUtil.getConfigVar('autoconnect', false);
             if (autoconnect === 'true' || autoconnect == '1') {
                 autoconnect = true;
@@ -189,27 +187,11 @@ var UI;
             UI.initSetting('logging', 'warn');
             WebUtil.init_logging(UI.getSetting('logging'));
 
-            // if port == 80 (or 443) then it won't be present and should be
-            // set manually
-            var port = window.location.port;
-            if (!port) {
-                if (window.location.protocol.substring(0,5) == 'https') {
-                    port = 443;
-                }
-                else if (window.location.protocol.substring(0,4) == 'http') {
-                    port = 80;
-                }
-            }
-
             /* Populate the controls if defaults are provided in the URL */
-            UI.initSetting('host', window.location.hostname);
-            UI.initSetting('port', port);
-            UI.initSetting('encrypt', (window.location.protocol === "https:"));
             UI.initSetting('cursor', !Util.isTouchDevice);
             UI.initSetting('resize', 'off');
             UI.initSetting('shared', true);
             UI.initSetting('view_only', false);
-            UI.initSetting('path', 'websockify');
             UI.initSetting('repeaterID', '');
         },
 
@@ -461,7 +443,6 @@ var UI;
         // Disable/enable controls depending on connection state
         updateVisualState: function() {
             //Util.Debug(">> updateVisualState");
-            document.getElementById('noVNC_setting_encrypt').disabled = UI.connected;
             if (Util.browserSupportsCursorURIs()) {
                 document.getElementById('noVNC_setting_cursor').disabled = UI.connected;
             } else {
@@ -473,9 +454,6 @@ var UI;
             document.getElementById('noVNC_setting_resize').disabled = UI.connected;
             document.getElementById('noVNC_setting_shared').disabled = UI.connected;
             document.getElementById('noVNC_setting_view_only').disabled = UI.connected;
-            document.getElementById('noVNC_setting_host').disabled = UI.connected;
-            document.getElementById('noVNC_setting_port').disabled = UI.connected;
-            document.getElementById('noVNC_setting_path').disabled = UI.connected;
             document.getElementById('noVNC_setting_repeaterID').disabled = UI.connected;
 
             if (UI.connected) {
@@ -834,7 +812,6 @@ var UI;
         // Save/apply settings when 'Apply' button is pressed
         settingsApply: function() {
             //Util.Debug(">> settingsApply");
-            UI.saveSetting('encrypt');
             if (Util.browserSupportsCursorURIs()) {
                 UI.saveSetting('cursor');
             }
@@ -848,9 +825,6 @@ var UI;
             UI.saveSetting('clip');
             UI.saveSetting('shared');
             UI.saveSetting('view_only');
-            UI.saveSetting('host');
-            UI.saveSetting('port');
-            UI.saveSetting('path');
             UI.saveSetting('repeaterID');
             UI.saveSetting('logging');
             
@@ -893,7 +867,6 @@ var UI;
             UI.closeAllPanels();
             UI.openControlbar();
 
-            UI.updateSetting('encrypt');
             if (Util.browserSupportsCursorURIs()) {
                 UI.updateSetting('cursor');
             } else {
@@ -904,7 +877,6 @@ var UI;
             UI.updateSetting('resize');
             UI.updateSetting('shared');
             UI.updateSetting('view_only');
-            UI.updateSetting('path');
             UI.updateSetting('repeaterID');
             UI.updateSetting('logging');
 
@@ -1139,9 +1111,15 @@ var UI;
         },
 
         connect: function() {
-            var host = document.getElementById('noVNC_setting_host').value;
-            var port = document.getElementById('noVNC_setting_port').value;
-            var path = document.getElementById('noVNC_setting_path').value;
+            var host = window.location.hostname;
+            var port = window.location.port;
+            var encrypt = false;
+            if (window.location.protocol.substring(0,5) == 'https') {
+                if (!port) port = 443;
+                encrypt = true;
+            } else if (!port) port = 80;
+            var path = window.location.pathname;
+            path=path.substring(1) + 'websockify';
 
             var password = WebUtil.getConfigVar('password');
             if (password === null) {
@@ -1160,7 +1138,7 @@ var UI;
             UI.closeAllPanels();
             UI.closeConnectPanel();
 
-            UI.rfb.set_encrypt(UI.getSetting('encrypt'));
+            UI.rfb.set_encrypt(encrypt);
             UI.rfb.set_local_cursor(UI.getSetting('cursor'));
             UI.rfb.set_shared(UI.getSetting('shared'));
             UI.rfb.set_view_only(UI.getSetting('view_only'));
